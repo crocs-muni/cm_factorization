@@ -336,7 +336,8 @@ def work_factor(args):
 
     except Exception as e:
         logger.warning('Exception: %s' % e)
-        traceback.print_exc()
+        if args.debug:
+            traceback.print_exc()
 
     if not success:
         print('Factorization failed')
@@ -360,6 +361,9 @@ def main():
                         help='Use optimized inversion algorithm (enabled by default)')
     parser.add_argument('--cheng', dest='cheng', default=1, type=int,
                         help='Use Cheng xgcd instead of norms (enabled by default)')
+
+    parser.add_argument('--debug', dest='debug', action='store_const', const=True, default=False,
+                        help='Debugging enabled')
 
     args = parser.parse_args()
     if args.action is None or args.action == 'factor':
