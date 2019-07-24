@@ -124,6 +124,7 @@ def xgcd(f, g, N=1):
         lc *= r_i_plus_plus.lc().lift()
         divisor = gcd(lc, N)
         if divisor > 1:
+            print('Divisisor of %s is %s'%(N,divisor))
             return divisor, None, None
 
         q = r_i // r_i_plus
@@ -171,12 +172,15 @@ def Qinverse(Q, a, N):
         return Xj
 
 
-def Qinverse2 (Hx, a, time_res):
+def Qinverse2 (Hx, a, N, time_res):
     ts = time.time()
-    r,s,t = xgcd(a.lift(), Hx)
+    r,s,t = xgcd(a.lift(), Hx, N)
     txgcd = time.time()
-    rinv = r[0]^(-1)
-    res = s * rinv
+    if (s,t) == (None, None):
+	res = r, 0
+    else:
+        rinv = r[0]^(-1)
+        res = 1, s * rinv
     tres = time.time()
 
     time_res.time_qinv_char_poly = 0
@@ -207,7 +211,9 @@ def CMfactor(D, N, verb = 1, ctries=10, utries=10, fact_time=None, use_quinv2=Fa
         if use_quinv2:
             Hx = R(Hx)
             Q.<j> = QuotientRing(R, R.ideal(Hx))
-            a = Q(j * Qinverse2(Hx, 1728 - j, res))
+            gcd, inverse = Qinverse2(Hx, 1728 - j, N, res)  
+	    if gcd == 1:
+                a = Q(j * inverse)                
 
         else:
             Q.<j> = ZN.extension(Hx)
@@ -216,7 +222,8 @@ def CMfactor(D, N, verb = 1, ctries=10, utries=10, fact_time=None, use_quinv2=Fa
     except ZeroDivisionError as noninv:
         logger.warning("is not invertible in Q! %s" % noninv)
         raise NotInvertibleException()
-
+    if gcd != 1:
+        exit(-1)
     if verb == 1:
         logger.debug('Q constructed')
         logger.debug('a computed: %s' % a)
@@ -234,7 +241,6 @@ def CMfactor(D, N, verb = 1, ctries=10, utries=10, fact_time=None, use_quinv2=Fa
         time_left = fact_time - (tta - ts)
         res.fact_timeout = time_left
         core_fnc = fork(CMfactor_core, time_left)
-
     cres = core_fnc(N, ctries, utries, a, Q, ZN, Hx, res, use_cheng=use_cheng)
     if is_undef(cres):
         res.out_of_time = True
