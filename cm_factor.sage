@@ -336,7 +336,7 @@ def work_factor(args):
             if args.mod % result.r != 0:
                 raise ValueError('Found result is invalid')
 
-            q = args.mod / result.r
+            q = args.mod // result.r
             success = True
             print("Factorization of N: %s is: \n%s * %s" % (args.mod, result.r, q))
 
